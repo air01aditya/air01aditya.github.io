@@ -29,3 +29,6 @@ desktop.ini
 
 # Binaries
 *.exe
+
+# Astro generated types
+.astro/
