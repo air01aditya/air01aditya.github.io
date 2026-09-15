@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACP.X — deep</title>
+<style>
+  :root{
+    --void:#04060D; --ice:#7FE3FF; --warn:#FF9A6B; --good:#6FE0A8;
+    --text:#CDE6F2; --dim:#587687; --line:rgba(127,227,255,.16);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--void);color:var(--text);font-family:var(--sans)}
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 30px 90px}
+  .lab{font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--dim)}
+  header{display:flex;justify-content:space-between;align-items:baseline;
+         border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
+  header h1{margin:0;font-size:14px;letter-spacing:.12em;font-weight:500}
+  header h1 b{color:var(--ice);font-weight:500}
+  .note{font-size:14.5px;color:#9BBECD;margin:0 0 30px;max-width:76ch;line-height:1.65}
+  .note b{color:var(--ice);font-weight:500}
+
+  .demo{margin-bottom:22px;border:1px solid var(--line);background:rgba(127,227,255,.02)}
+  .stage{position:relative;height:420px;overflow:hidden;background:#020306}
+  .stage canvas,.stage pre{position:absolute;inset:0;width:100%;height:100%;margin:0;display:block}
+  .stage pre{font-family:var(--mono);color:var(--ice);white-space:pre;overflow:hidden;
+             display:grid;place-items:center;line-height:1;letter-spacing:0}
+  .cap{padding:15px 20px 18px;border-top:1px solid var(--line);
+       display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start}
+  .cap .t{font-size:16px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+  .cap .t span{color:var(--ice);font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+               margin-right:10px;font-weight:400}
+  .cap .d{font-size:13.5px;color:var(--dim);line-height:1.6;max-width:70ch}
+  .cap .d em{color:var(--warn);font-style:normal}
+  .tagline{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--good);
+           border:1px solid rgba(111,224,168,.3);padding:6px 11px;white-space:nowrap}
+  .hint{position:absolute;left:16px;bottom:14px;z-index:3;font-family:var(--mono);
+        font-size:10px;letter-spacing:.18em;color:rgba(205,230,242,.55);pointer-events:none}
+  @media (max-width:780px){
+    .stage{height:300px}.cap{grid-template-columns:1fr}.wrap{padding:34px 18px 60px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ACP<b>.X</b> &nbsp;//&nbsp; DEEP</h1><span class="lab">05 SYSTEMS &middot; NO LIBRARIES</span>
+  </header>
+  <p class="note">Not effects &mdash; <b>simulations</b>. A shader bending light around a mass, a fluid solver, a chemistry model, a software 3D renderer and a physics engine. Each one is the actual maths, written out, in about forty lines. <b>Only the panel you are looking at runs.</b></p>
+
+  <div class="demo" data-run="lens">
+    <div class="stage"><canvas id="c-lens"></canvas><div class="hint">MOVE YOUR CURSOR &mdash; THE LIGHT BENDS</div></div>
+    <div class="cap">
+      <div><div class="t"><span>01</span>Gravitational lensing</div>
+        <div class="d">A GLSL fragment shader running on your GPU. Light from the starfield behind is deflected around a mass, the way it actually is near a black hole &mdash; stars smear into an <em>Einstein ring</em> at the edge. The O from the intro, taken literally.</div></div>
+      <span class="tagline">WEBGL SHADER</span>
+    </div>
+  </div>
+
+  <div class="demo" data-run="fluid">
+    <div class="stage"><canvas id="c-fluid"></canvas><div class="hint">DRAG THROUGH IT</div></div>
+    <div class="cap">
+      <div><div class="t"><span>02</span>Fluid</div>
+        <div class="d">A real velocity field with <em>semi-Lagrangian advection</em> &mdash; every frame each cell asks where its contents came from and pulls from there. Push it and the momentum persists and curls, because it is being solved rather than faked.</div></div>
+      <span class="tagline">NAVIER&ndash;STOKES</span>
+    </div>
+  </div>
+
+  <div class="demo" data-run="rd">
+    <div class="stage"><canvas id="c-rd"></canvas><div class="hint">CLICK TO SEED MORE</div></div>
+    <div class="cap">
+      <div><div class="t"><span>03</span>Reaction &ndash; diffusion</div>
+        <div class="d">Two chemicals, one feeding and one killing, diffusing at different rates. <em>Gray&ndash;Scott</em>: the model Turing proposed for how a leopard gets its spots. Seeded with three letters &mdash; watch what grows out of them.</div></div>
+      <span class="tagline">TURING PATTERN</span>
+    </div>
+  </div>
+
+  <div class="demo" data-run="ascii">
+    <div class="stage"><pre id="c-ascii"></pre><div class="hint">RENDERED AS TEXT &mdash; NO PIXELS</div></div>
+    <div class="cap">
+      <div><div class="t"><span>04</span>Software renderer</div>
+        <div class="d">A torus lit by a directional light, with a <em>z-buffer</em> for depth, rasterised into characters. No canvas, no WebGL &mdash; the output really is text on the page. You could select it.</div></div>
+      <span class="tagline">ASCII 3D</span>
+    </div>
+  </div>
+
+  <div class="demo" data-run="rope">
+    <div class="stage"><canvas id="c-rope"></canvas><div class="hint">GRAB IT AND THROW IT</div></div>
+    <div class="cap">
+      <div><div class="t"><span>05</span>Cloth</div>
+        <div class="d">Points joined by distance constraints, solved by <em>Verlet integration</em> &mdash; no velocities stored, motion is implied by where each point was last frame. Grab it and it swings with real weight.</div></div>
+      <span class="tagline">VERLET PHYSICS</span>
+    </div>
+  </div>
+</div>
+
+<script>
+window.__err = null;
+window.addEventListener('error', function (e) { window.__err = e.message; });
+
+/* ── only run what is on screen ───────────────────────────────────────── */
+var RUNNING = {};
+function loop(key, fn) {
+  function tick() {
+    if (RUNNING[key]) fn();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+var io = new IntersectionObserver(function (es) {
+  es.forEach(function (e) { RUNNING[e.target.dataset.run] = e.isIntersecting; });
+}, { threshold: 0.15 });
+document.querySelectorAll('.demo').forEach(function (d) { io.observe(d); });
+
+function fit(cv) {
+  var r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.max(2, r.width * d); cv.height = Math.max(2, r.height * d);
+  return d;
+}
+
+/* ── 01 gravitational lensing (WebGL) ─────────────────────────────────── */
+(function () {
+  var cv = document.getElementById('c-lens');
+  var gl = cv.getContext('webgl') || cv.getContext('experimental-webgl');
+  if (!gl) { cv.parentNode.innerHTML = '<div style="padding:24px;color:#587687">WebGL unavailable</div>'; return; }
+
+  var vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  var fs = [
+    'precision highp float;',
+    'uniform vec2 res; uniform vec2 m; uniform float t;',
+    // cheap hash-based starfield
+    'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+    'vec3 stars(vec2 uv){',
+    '  vec3 c=vec3(0.);',
+    '  for(int i=0;i<3;i++){',
+    '    float s=float(i)*1.7+1.0;',
+    '    vec2 g=floor(uv*s*90.0); vec2 f=fract(uv*s*90.0);',
+    '    float r=h(g+float(i)*37.0);',
+    '    if(r>0.972){',
+    '      float d=length(f-0.5);',
+    '      float b=smoothstep(0.42,0.0,d)*(0.5+0.5*sin(t*1.6+r*30.0));',
+    '      c+=vec3(0.80,0.91,1.0)*b*(0.85+r*0.6);',
+    '    }',
+    '  }',
+    '  return c;',
+    '}',
+    'void main(){',
+    '  vec2 uv=(gl_FragCoord.xy-0.5*res)/res.y;',
+    '  vec2 c=(m-0.5*res)/res.y;',
+    '  vec2 d=uv-c; float r=length(d);',
+    '  float rs=0.13;',                       // event horizon
+    // deflection falls off with the square of distance, like real lensing
+    '  float defl=rs*rs*1.9/(r*r+0.0022);',
+    '  vec2 luv=uv-normalize(d)*defl;',
+    '  vec3 col=stars(luv*0.9+vec2(t*0.004,0.0));',
+    // accretion ring
+    '  float ring=smoothstep(0.055,0.0,abs(r-rs*1.75));',
+    '  col+=vec3(0.62,0.88,1.0)*ring*0.85*(0.82+0.18*sin(t*1.6));',
+    // shadow
+    '  col*=smoothstep(rs*0.92,rs*1.28,r);',
+    '  gl_FragColor=vec4(col,1.0);',
+    '}'
+  ].join('\n');
+
+  function sh(type, src) {
+    var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { window.__err = gl.getShaderInfoLog(s); return null; }
+    return s;
+  }
+  var pr = gl.createProgram();
+  var a = sh(gl.VERTEX_SHADER, vs), b = sh(gl.FRAGMENT_SHADER, fs);
+  if (!a || !b) return;
+  gl.attachShader(pr, a); gl.attachShader(pr, b); gl.linkProgram(pr); gl.useProgram(pr);
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(pr, 'p');
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  var uRes = gl.getUniformLocation(pr, 'res'), uM = gl.getUniformLocation(pr, 'm'),
+      uT = gl.getUniformLocation(pr, 't');
+  var mouse = [0, 0], t0 = performance.now();
+
+  function size() { fit(cv); gl.viewport(0, 0, cv.width, cv.height); mouse = [cv.width / 2, cv.height / 2]; }
+  size(); addEventListener('resize', size);
+  cv.addEventListener('mousemove', function (e) {
+    var r = cv.getBoundingClientRect(), d = cv.width / r.width;
+    mouse = [(e.clientX - r.left) * d, (r.height - (e.clientY - r.top)) * d];
+  });
+
+  loop('lens', function () {
+    gl.uniform2f(uRes, cv.width, cv.height);
+    gl.uniform2f(uM, mouse[0], mouse[1]);
+    gl.uniform1f(uT, (performance.now() - t0) / 1000);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  });
+})();
+
+/* ── 02 fluid: semi-Lagrangian advection ──────────────────────────────── */
+(function () {
+  var cv = document.getElementById('c-fluid'), ctx = cv.getContext('2d');
+  var N = 108, M = 62, u = [], v = [], dye = [], img = null, oc = null, octx = null;
+  function alloc() {
+    u = new Float32Array(N * M); v = new Float32Array(N * M); dye = new Float32Array(N * M);
+    oc = document.createElement('canvas'); oc.width = N; oc.height = M; octx = oc.getContext('2d');
+    img = octx.createImageData(N, M);
+  }
+  alloc();
+  function size() { fit(cv); }
+  size(); addEventListener('resize', size);
+
+  var px = 0, py = 0, has = false;
+  cv.addEventListener('mousemove', function (e) {
+    var r = cv.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width * N, y = (e.clientY - r.top) / r.height * M;
+    if (has) {
+      var dx = x - px, dy = y - py;
+      for (var i = -2; i <= 2; i++) for (var j = -2; j <= 2; j++) {
+        var gx = Math.round(x) + i, gy = Math.round(y) + j;
+        if (gx < 1 || gy < 1 || gx >= N - 1 || gy >= M - 1) continue;
+        var k = gy * N + gx;
+        u[k] += dx * 0.8; v[k] += dy * 0.8; dye[k] = Math.min(1, dye[k] + 0.5);
+      }
+    }
+    px = x; py = y; has = true;
+  });
+  cv.addEventListener('mouseleave', function () { has = false; });
+
+  function sample(f, x, y) {
+    x = Math.max(0, Math.min(N - 1.001, x)); y = Math.max(0, Math.min(M - 1.001, y));
+    var x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0;
+    var a = f[y0 * N + x0], b = f[y0 * N + x0 + 1], c = f[(y0 + 1) * N + x0], d = f[(y0 + 1) * N + x0 + 1];
+    return a * (1 - fx) * (1 - fy) + b * fx * (1 - fy) + c * (1 - fx) * fy + d * fx * fy;
+  }
+
+  var u2 = new Float32Array(N * M), v2 = new Float32Array(N * M), d2 = new Float32Array(N * M);
+  var clock = 0;
+  loop('fluid', function () {
+    // A standing source, so the panel is alive before anyone touches it -
+    // an empty black box reads as broken, not as waiting.
+    clock += 0.016;
+    var sx = Math.round(N * 0.5 + Math.cos(clock * 0.55) * N * 0.22);
+    var sy = Math.round(M * 0.72 + Math.sin(clock * 0.9) * M * 0.08);
+    for (var oi = -2; oi <= 2; oi++) for (var oj = -2; oj <= 2; oj++) {
+      var gx = sx + oi, gy = sy + oj;
+      if (gx < 1 || gy < 1 || gx >= N - 1 || gy >= M - 1) continue;
+      var kk = gy * N + gx;
+      dye[kk] = Math.min(1, dye[kk] + 0.55);
+      // assign, never accumulate: adding every frame makes velocity run away
+      // and the dye leaves the grid before it can be seen
+      u[kk] = Math.cos(clock * 1.7) * 1.6;
+      v[kk] = -2.4;
+    }
+    // advect every field back along its own velocity
+    for (var y = 0; y < M; y++) for (var x = 0; x < N; x++) {
+      var k = y * N + x;
+      var bx = x - u[k] * 0.18, by = y - v[k] * 0.18;
+      u2[k] = Math.max(-9, Math.min(9, sample(u, bx, by) * 0.985));
+      v2[k] = Math.max(-9, Math.min(9, sample(v, bx, by) * 0.985 + 0.004));
+      d2[k] = sample(dye, bx, by) * 0.992;
+    }
+    u.set(u2); v.set(v2); dye.set(d2);
+
+    var p = img.data;
+    for (var i = 0; i < N * M; i++) {
+      var s = Math.min(1, dye[i]);
+      var sp = Math.min(1, Math.hypot(u[i], v[i]) * 0.22);
+      p[i * 4]     = (20 + sp * 235) * s;
+      p[i * 4 + 1] = (120 + sp * 120) * s;
+      p[i * 4 + 2] = (190 + sp * 65) * s + 8;
+      p[i * 4 + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(oc, 0, 0, cv.width, cv.height);
+  });
+})();
+
+/* ── 03 Gray–Scott reaction–diffusion ─────────────────────────────────── */
+(function () {
+  var cv = document.getElementById('c-rd'), ctx = cv.getContext('2d');
+  var N = 200, M = 112, A, B, A2, B2, img, oc, octx;
+  var DA = 1.0, DB = 0.5, FEED = 0.0367, KILL = 0.0649;
+
+  function seedText() {
+    var t = document.createElement('canvas'); t.width = N; t.height = M;
+    var c = t.getContext('2d');
+    c.fillStyle = '#000'; c.fillRect(0, 0, N, M);
+    c.fillStyle = '#fff'; c.font = 'bold 54px monospace'; c.textAlign = 'center';
+    c.fillText('ACP', N / 2, M / 2 + 19);
+    var d = c.getImageData(0, 0, N, M).data;
+    for (var i = 0; i < N * M; i++) if (d[i * 4] > 120) B[i] = 1;
+  }
+  function init() {
+    A = new Float32Array(N * M).fill(1); B = new Float32Array(N * M);
+    A2 = new Float32Array(N * M); B2 = new Float32Array(N * M);
+    oc = document.createElement('canvas'); oc.width = N; oc.height = M; octx = oc.getContext('2d');
+    img = octx.createImageData(N, M);
+    seedText();
+  }
+  init();
+  function size() { fit(cv); }
+  size(); addEventListener('resize', size);
+
+  cv.addEventListener('click', function (e) {
+    var r = cv.getBoundingClientRect();
+    var x = Math.round((e.clientX - r.left) / r.width * N), y = Math.round((e.clientY - r.top) / r.height * M);
+    for (var i = -4; i <= 4; i++) for (var j = -4; j <= 4; j++) {
+      var gx = x + i, gy = y + j;
+      if (gx < 1 || gy < 1 || gx >= N - 1 || gy >= M - 1) continue;
+      B[gy * N + gx] = 1;
+    }
+  });
+
+  function lap(f, k, x, y) {
+    return f[k - 1] * 0.2 + f[k + 1] * 0.2 + f[k - N] * 0.2 + f[k + N] * 0.2
+         + f[k - N - 1] * 0.05 + f[k - N + 1] * 0.05 + f[k + N - 1] * 0.05 + f[k + N + 1] * 0.05
+         - f[k];
+  }
+  loop('rd', function () {
+    for (var s = 0; s < 6; s++) {                 // several solver steps per frame
+      for (var y = 1; y < M - 1; y++) for (var x = 1; x < N - 1; x++) {
+        var k = y * N + x, a = A[k], b = B[k], abb = a * b * b;
+        A2[k] = a + (DA * lap(A, k, x, y) - abb + FEED * (1 - a));
+        B2[k] = b + (DB * lap(B, k, x, y) + abb - (KILL + FEED) * b);
+        if (A2[k] < 0) A2[k] = 0; if (A2[k] > 1) A2[k] = 1;
+        if (B2[k] < 0) B2[k] = 0; if (B2[k] > 1) B2[k] = 1;
+      }
+      A.set(A2); B.set(B2);
+    }
+    var p = img.data;
+    for (var i = 0; i < N * M; i++) {
+      var val = Math.min(1, Math.max(0, B[i] * 3.6));
+      p[i * 4]     = 10 + val * 120;
+      p[i * 4 + 1] = 16 + val * 210;
+      p[i * 4 + 2] = 26 + val * 255;
+      p[i * 4 + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(oc, 0, 0, cv.width, cv.height);
+  });
+})();
+
+/* ── 04 ASCII software renderer (torus + z-buffer) ────────────────────── */
+(function () {
+  var el = document.getElementById('c-ascii');
+  var CH = '.,-~:;=!*#$@', W = 78, H = 26, A = 0, Bv = 0;
+  function frame() {
+    var out = new Array(W * H).fill(' '), z = new Float32Array(W * H);
+    for (var th = 0; th < 6.28; th += 0.09) {
+      for (var ph = 0; ph < 6.28; ph += 0.025) {
+        var ct = Math.cos(th), st = Math.sin(th), cp = Math.cos(ph), sp = Math.sin(ph);
+        var cA = Math.cos(A), sA = Math.sin(A), cB = Math.cos(Bv), sB = Math.sin(Bv);
+        var h = ct + 2, d = 1 / (sp * h * sA + st * cA + 5);
+        var t = sp * h * cA - st * sA;
+        var x = (W / 2 + 26 * d * (cp * h * cB - t * sB)) | 0;
+        var y = (H / 2 + 13 * d * (cp * h * sB + t * cB)) | 0;
+        var lum = cp * ct * sB - ct * st * cA - st * sA + cB * (ct * sA - cp * ct * cA);
+        if (y >= 0 && y < H && x >= 0 && x < W && d > z[y * W + x]) {
+          z[y * W + x] = d;
+          var n = Math.max(0, Math.round(lum * 8));
+          out[y * W + x] = CH[Math.min(CH.length - 1, n)];
+        }
+      }
+    }
+    var s = '';
+    for (var r = 0; r < H; r++) s += out.slice(r * W, r * W + W).join('') + '\n';
+    el.textContent = s;
+    A += 0.05; Bv += 0.022;
+  }
+  function size() {
+    var r = el.getBoundingClientRect();
+    el.style.fontSize = Math.max(6, Math.min(r.width / W * 1.72, r.height / H * 0.95)) + 'px';
+  }
+  size(); addEventListener('resize', size);
+  loop('ascii', frame);
+})();
+
+/* ── 05 Verlet cloth ──────────────────────────────────────────────────── */
+(function () {
+  var cv = document.getElementById('c-rope'), ctx = cv.getContext('2d');
+  var COLS = 16, ROWS = 10, pts = [], links = [], grab = null, mx = 0, my = 0, S = 1;
+
+  function build() {
+    S = fit(cv);
+    var w = cv.width / S, h = cv.height / S;
+    var gap = Math.min(w / (COLS + 3), h / (ROWS + 4));
+    var ox = w / 2 - (COLS - 1) * gap / 2, oy = h * 0.14;
+    pts = []; links = [];
+    for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+      pts.push({ x: ox + c * gap, y: oy + r * gap, px: ox + c * gap, py: oy + r * gap,
+                 pin: r === 0 && (c % 5 === 0 || c === COLS - 1) });
+    }
+    for (var r2 = 0; r2 < ROWS; r2++) for (var c2 = 0; c2 < COLS; c2++) {
+      var i = r2 * COLS + c2;
+      if (c2 < COLS - 1) links.push([i, i + 1, gap]);
+      if (r2 < ROWS - 1) links.push([i, i + COLS, gap]);
+    }
+  }
+  build(); addEventListener('resize', build);
+
+  function pos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  cv.addEventListener('mousedown', function (e) {
+    var p = pos(e), best = null, bd = 900;
+    for (var i = 0; i < pts.length; i++) {
+      var d = (pts[i].x - p.x) * (pts[i].x - p.x) + (pts[i].y - p.y) * (pts[i].y - p.y);
+      if (d < bd) { bd = d; best = pts[i]; }
+    }
+    grab = best; mx = p.x; my = p.y;
+  });
+  addEventListener('mousemove', function (e) { var p = pos(e); mx = p.x; my = p.y; });
+  addEventListener('mouseup', function () { grab = null; });
+
+  loop('rope', function () {
+    var w = cv.width / S, h = cv.height / S;
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      if (p.pin) continue;
+      if (p === grab) { p.px = p.x = mx; p.py = p.y = my; continue; }
+      var vx = (p.x - p.px) * 0.99, vy = (p.y - p.py) * 0.99;
+      p.px = p.x; p.py = p.y;
+      p.x += vx; p.y += vy + 0.42;
+      if (p.y > h - 4) { p.y = h - 4; p.py = p.y + vy * 0.4; }
+      if (p.x < 4) p.x = 4; if (p.x > w - 4) p.x = w - 4;
+    }
+    for (var k = 0; k < 4; k++) {                 // constraint relaxation
+      for (var l = 0; l < links.length; l++) {
+        var a = pts[links[l][0]], b = pts[links[l][1]], rest = links[l][2];
+        var dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.001;
+        var diff = (d - rest) / d * 0.5;
+        var ox2 = dx * diff, oy2 = dy * diff;
+        if (!a.pin && a !== grab) { a.x += ox2; a.y += oy2; }
+        if (!b.pin && b !== grab) { b.x -= ox2; b.y -= oy2; }
+      }
+    }
+    ctx.setTransform(S, 0, 0, S, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.lineWidth = 1;
+    for (var l2 = 0; l2 < links.length; l2++) {
+      var a2 = pts[links[l2][0]], b2 = pts[links[l2][1]];
+      var stretch = Math.min(1, Math.abs(Math.hypot(b2.x - a2.x, b2.y - a2.y) - links[l2][2]) / 12);
+      ctx.strokeStyle = 'rgba(' + (stretch > .5 ? '255,154,107' : '127,227,255') + ',' + (.18 + stretch * .7) + ')';
+      ctx.beginPath(); ctx.moveTo(a2.x, a2.y); ctx.lineTo(b2.x, b2.y); ctx.stroke();
+    }
+    for (var m = 0; m < pts.length; m++) {
+      if (!pts[m].pin) continue;
+      ctx.fillStyle = 'rgba(111,224,168,.9)';
+      ctx.beginPath(); ctx.arc(pts[m].x, pts[m].y, 2.6, 0, 6.283); ctx.fill();
+    }
+  });
+})();
+</script>
+</body>
+</html>
