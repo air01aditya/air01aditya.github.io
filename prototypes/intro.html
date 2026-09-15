@@ -10,6 +10,7 @@
   html, body { height: 100%; margin: 0; }
   body { font-family: -apple-system, "Segoe UI", sans-serif; overflow: hidden; background: #000; }
   #bg { position: fixed; inset: 0; background: #FCFCFB; }
+  #stars { position: fixed; inset: 0; opacity: 0; pointer-events: none; }
   #stage { position: fixed; inset: 0; display: grid; place-items: center; cursor: pointer; }
   #sig { width: min(80vw, 1000px); height: auto; overflow: visible; }
   /* potrace emits contours and their counters in one path - without evenodd
@@ -30,6 +31,7 @@
 </head>
 <body>
 <div id="bg"></div>
+<canvas id="stars"></canvas>
 <div id="hint">click anywhere to skip</div>
 <div id="stage">
   <svg id="sig" viewBox="0 0 1124 345" xmlns="http://www.w3.org/2000/svg" aria-label="Aditya Chandra Prajapati">
@@ -71,9 +73,50 @@
   var ALL = ["#seg-A","#seg-C","#seg-P","#seg-ditya","#seg-handra","#seg-rajapati"];
   var START_DX = {"A":216,"C":2,"P":-118};
   var nib = document.getElementById('nib');
-  var tl = null, slow = false;
+  var tl = null, slow = false, raf = null;
+
+  // Stars come up as the sheet goes black - the same field the homepage
+  // opens with, so the two pages are continuous.
+  var cv = document.getElementById('stars'), ctx = cv.getContext('2d'), S = [];
+  function sizeStars() {
+    var d = window.devicePixelRatio || 1;
+    cv.width = innerWidth * d; cv.height = innerHeight * d;
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    S = [];
+    for (var i = 0; i < 280; i++) {
+      S.push({
+        x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+        r: Math.random() * 1.2 + 0.2,
+        p: Math.random() * 6.283,
+        s: Math.random() * 0.013 + 0.002,
+        b: 0.35 + Math.random() * 0.65
+      });
+    }
+  }
+  sizeStars();
+  addEventListener('resize', sizeStars);
+
+  function twinkle() {
+    var k = slow ? 0.4 : 1;
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (var i = 0; i < S.length; i++) {
+      var st = S[i];
+      st.p += st.s * k;
+      var a = (0.28 + Math.abs(Math.sin(st.p)) * 0.72) * st.b;
+      ctx.fillStyle = 'rgba(200,228,242,' + a.toFixed(3) + ')';
+      ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, 6.283); ctx.fill();
+    }
+    raf = requestAnimationFrame(twinkle);
+  }
+  function startStars() { if (!raf) raf = requestAnimationFrame(twinkle); }
+  function stopStars() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+  }
 
   function build() {
+    stopStars();
+    gsap.set('#stars', { opacity: 0 });
     gsap.set('#bg', { backgroundColor: '#FCFCFB' });
     gsap.set('.seg', { opacity: 0 });
     gsap.set('#nib', { opacity: 0 });
@@ -116,6 +159,8 @@
     var hold = at + 0.95;
     t.to(ALL, { opacity: 0, duration: 1.3, ease: 'power2.inOut' }, hold);
     t.to('#bg', { backgroundColor: '#000000', duration: 1.4, ease: 'power2.inOut' }, hold + 0.1);
+    t.add(startStars, hold + 0.35);
+    t.to('#stars', { opacity: 1, duration: 1.8, ease: 'power1.inOut' }, hold + 0.45);
 
     t.timeScale(slow ? 0.35 : 1);
     return t;
@@ -135,7 +180,10 @@
 
   // ?t=3.2 freezes the sequence at that second - handy for inspecting one beat.
   var qs = new URLSearchParams(location.search);
-  if (qs.has('t')) tl.pause(parseFloat(qs.get('t')) || 0);
+  if (qs.has('t')) {
+    tl.pause(parseFloat(qs.get('t')) || 0);
+    startStars();   // .add() callbacks do not fire on a seek
+  }
 })();
 </script>
 </body>
