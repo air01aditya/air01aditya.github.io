@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACP.X — system diagrams, live</title>
+<style>
+  :root {
+    --void: #04060D; --ice: #7FE3FF; --warn: #FF9A6B; --good: #6FE0A8; --bad: #FF6B6B;
+    --text: #CDE6F2; --dim: #587687; --line: rgba(127,227,255,.16);
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--void); color: var(--text); font-family: var(--sans);
+    background-image:
+      linear-gradient(rgba(127,227,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(127,227,255,.03) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 46px 32px 90px; }
+  .lab { font-family: var(--mono); font-size: 10px; letter-spacing: .26em; color: var(--dim); }
+  header { display: flex; justify-content: space-between; align-items: baseline;
+           border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 16px; }
+  header h1 { margin: 0; font-size: 14px; letter-spacing: .12em; font-weight: 500; }
+  header h1 b { color: var(--ice); font-weight: 500; }
+  .note { font-size: 14px; color: #9BBECD; margin: 0 0 32px; max-width: 74ch; line-height: 1.65; }
+  .note b { color: var(--ice); font-weight: 500; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  figure { margin: 0; border: 1px solid var(--line); background: rgba(127,227,255,.025);
+           transition: border-color .25s ease, box-shadow .25s ease; }
+  figure:hover { border-color: rgba(127,227,255,.4); box-shadow: 0 0 34px rgba(127,227,255,.1); }
+  .can { display: block; width: 100%; height: 250px; }
+  figcaption { padding: 15px 18px 17px; border-top: 1px solid var(--line); }
+  figcaption .t { font-size: 15px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 6px; }
+  figcaption .t span { color: var(--ice); font-family: var(--mono); font-size: 10px;
+                       letter-spacing: .2em; margin-right: 10px; font-weight: 400; }
+  figcaption .d { font-size: 13px; color: var(--dim); line-height: 1.55; margin-bottom: 9px; }
+  figcaption .use { font-size: 12.5px; line-height: 1.5; color: #8FB3C4;
+                    border-left: 2px solid rgba(127,227,255,.35); padding-left: 10px; }
+  figcaption .use b { font-family: var(--mono); font-size: 10px; letter-spacing: .2em;
+                      color: var(--ice); display: block; margin-bottom: 3px; font-weight: 400; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .wrap { padding: 36px 20px 70px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ACP<b>.X</b> &nbsp;//&nbsp; SYSTEM DIAGRAMS</h1>
+    <span class="lab">06 TREATMENTS &middot; LIVE</span>
+  </header>
+  <p class="note">Same technique as the propagation one, pointed at things a <b>backend interview</b> actually asks about. Each of these is a real mechanism &mdash; so when someone asks what it is, the answer is a conversation rather than &ldquo;it looked nice&rdquo;.</p>
+
+  <div class="grid">
+    <figure><canvas class="can" id="d1"></canvas><figcaption>
+      <div class="t"><span>07</span>Request lifecycle</div>
+      <div class="d">One request crossing client &rarr; edge &rarr; service &rarr; database and back, holding at each hop for the time that hop costs.</div>
+      <div class="use"><b>WHERE</b>Header of the projects page, or behind the section about any API you build. The single clearest &ldquo;I understand what happens after the click&rdquo; image you can put on a page.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="d2"></canvas><figcaption>
+      <div class="t"><span>08</span>Queue &amp; workers</div>
+      <div class="d">Jobs arrive faster than three workers can drain them. The queue visibly grows, then catches up. That is backpressure, drawn.</div>
+      <div class="use"><b>WHERE</b>Next to anything asynchronous. Also the honest metaphor for your own backlog &mdash; it would sit well beside the locked project slots.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="d3"></canvas><figcaption>
+      <div class="t"><span>09</span>Cache hit / miss</div>
+      <div class="d">Hits return short and green. Misses travel all the way to the database and come back amber. Live hit ratio in the corner.</div>
+      <div class="use"><b>WHERE</b>A section on performance. It makes an abstract number felt &mdash; you <em>see</em> why a 90% hit rate matters before anyone explains it.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="d4"></canvas><figcaption>
+      <div class="t"><span>10</span>Load balancer &amp; failover</div>
+      <div class="d">Traffic spread across four instances. One drops out, the balancer stops routing to it, and the rest absorb the load until it recovers.</div>
+      <div class="use"><b>WHERE</b>Hero background for a backend-focused homepage. It says &ldquo;distributed systems&rdquo; without a single word of copy.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="d5"></canvas><figcaption>
+      <div class="t"><span>11</span>Replication lag</div>
+      <div class="d">A leader takes writes and three followers catch up at different speeds. The ring around each follower shows how far behind it is.</div>
+      <div class="use"><b>WHERE</b>Any database section. This is the one that signals depth &mdash; most juniors have never thought about what &ldquo;eventually consistent&rdquo; looks like.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="d6"></canvas><figcaption>
+      <div class="t"><span>12</span>Interference</div>
+      <div class="d">Two wavefronts crossing a mesh, brighter where they meet. No meaning attached &mdash; this one is pure atmosphere.</div>
+      <div class="use"><b>WHERE</b>Full-page background at 12&ndash;18% opacity. The only one here meant to sit behind text rather than be looked at directly.</div>
+    </figcaption></figure>
+  </div>
+</div>
+
+<script>
+const ICE='127,227,255', WARN='255,154,107', GOOD='111,224,168', BAD='255,107,107';
+
+function make(id, init, draw) {
+  const cv = document.getElementById(id), ctx = cv.getContext('2d');
+  let W=0, H=0, s=null;
+  function size() {
+    const d = window.devicePixelRatio || 1, r = cv.getBoundingClientRect();
+    W = r.width; H = r.height; cv.width = W*d; cv.height = H*d;
+    ctx.setTransform(d,0,0,d,0,0); s = init(W,H);
+  }
+  size(); addEventListener('resize', size);
+  (function loop(t){ ctx.clearRect(0,0,W,H); draw(ctx,s,W,H,t); requestAnimationFrame(loop); })(0);
+}
+function box(ctx,x,y,w,h,col,a){ ctx.strokeStyle='rgba('+col+','+a+')'; ctx.lineWidth=1; ctx.strokeRect(x,y,w,h); }
+function label(ctx,t,x,y,col,a){ ctx.fillStyle='rgba('+col+','+a+')'; ctx.font='9px ui-monospace,monospace'; ctx.fillText(t,x,y); }
+function glow(ctx,x,y,r,col,a){ const g=ctx.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0,'rgba('+col+','+a+')'); g.addColorStop(1,'rgba('+col+',0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.fill(); }
+
+/* 07 — request lifecycle */
+make('d1',(W,H)=>{
+  const names=['CLIENT','EDGE','SERVICE','DB'], hold=[0,140,320,540];
+  const tiers=names.map((n,i)=>({n,x:38+i*((W-116)/3),y:H/2,hold:hold[i]}));
+  return {tiers,p:0,stage:0,wait:0,dir:1,ms:0};
+},(ctx,s,W,H)=>{
+  for(let i=0;i<s.tiers.length-1;i++){
+    ctx.strokeStyle='rgba('+ICE+',.13)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(s.tiers[i].x,H/2); ctx.lineTo(s.tiers[i+1].x,H/2); ctx.stroke();
+  }
+  s.tiers.forEach(t=>{ box(ctx,t.x-26,H/2-20,52,40,ICE,.3); label(ctx,t.n,t.x-24,H/2+34,ICE,.5); });
+  if(s.wait>0){ s.wait--; } else {
+    s.p += .022*s.dir;
+    if(s.dir>0 && s.p>=1){ s.p=1; s.stage++; s.wait=s.tiers[Math.min(3,s.stage)].hold/16;
+      if(s.stage>=3){ s.dir=-1; } else s.p=0; }
+    else if(s.dir<0 && s.p<=0){ s.p=0; s.stage--; if(s.stage<=0){ s.dir=1; s.stage=0; s.ms=0; } }
+  }
+  const a=s.tiers[Math.max(0,Math.min(2,s.dir>0?s.stage:s.stage-1))];
+  const b=s.tiers[Math.max(1,Math.min(3,(s.dir>0?s.stage:s.stage-1)+1))];
+  const f=s.dir>0?s.p:1-s.p;
+  const x=a.x+(b.x-a.x)*f, col=s.dir>0?ICE:GOOD;
+  glow(ctx,x,H/2,14,col,.75);
+  ctx.fillStyle='rgba(235,250,255,.95)'; ctx.beginPath(); ctx.arc(x,H/2,3,0,6.283); ctx.fill();
+  s.ms+=s.dir>0?1.6:.9;
+  label(ctx,(s.dir>0?'REQUEST':'RESPONSE')+'  '+Math.round(s.ms)+'ms',W-136,20,s.dir>0?ICE:GOOD,.8);
+});
+
+/* 08 — queue and workers */
+make('d2',(W,H)=>({q:[],workers:[0,1,2].map(i=>({y:H/2+(i-1)*44,busy:0,job:null})),spawn:0,t:0}),
+(ctx,s,W,H)=>{
+  s.t++;
+  const rate = 18 + Math.round(Math.sin(s.t/220)*12);      // arrival rate swings
+  if(s.t % Math.max(4,rate) === 0 && s.q.length < 26) s.q.push({x:10});
+  const qx=90, wx=W-92;
+  label(ctx,'QUEUE  depth '+String(s.q.length).padStart(2,'0'),18,20,s.q.length>14?WARN:ICE,.85);
+  ctx.strokeStyle='rgba('+ICE+',.18)'; ctx.strokeRect(18,H/2-58,58,116);
+  s.q.forEach((j,i)=>{ const yy=H/2+52-i*4.4; if(yy<H/2-56) return;
+    ctx.fillStyle='rgba('+(s.q.length>14?WARN:ICE)+',.8)'; ctx.fillRect(24,yy,46,3); });
+  s.workers.forEach(w=>{
+    ctx.strokeStyle='rgba('+ICE+',.28)'; ctx.strokeRect(wx-26,w.y-14,52,28);
+    if(w.busy>0){ w.busy--; glow(ctx,wx,w.y,18,GOOD,.3*(w.busy/60));
+      ctx.fillStyle='rgba('+GOOD+',.9)'; ctx.fillRect(wx-20,w.y-3,40*(1-w.busy/60),6); }
+    else if(s.q.length){ s.q.shift(); w.busy=60; }
+    if(w.job) w.job=null;
+    ctx.strokeStyle='rgba('+ICE+',.12)'; ctx.beginPath();
+    ctx.moveTo(76,H/2); ctx.lineTo(wx-26,w.y); ctx.stroke();
+  });
+  label(ctx,'3 WORKERS',W-92,H-14,ICE,.5);
+});
+
+/* 09 — cache hit / miss */
+make('d3',(W,H)=>({reqs:[],t:0,hits:0,total:0}),(ctx,s,W,H)=>{
+  s.t++;
+  const cx=W*.42, dx=W*.82, y=H/2;
+  ctx.strokeStyle='rgba('+ICE+',.13)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(30,y); ctx.lineTo(dx,y); ctx.stroke();
+  box(ctx,cx-30,y-20,60,40,ICE,.34); label(ctx,'CACHE',cx-20,y+34,ICE,.55);
+  box(ctx,dx-26,y-20,52,40,ICE,.26); label(ctx,'DB',dx-8,y+34,ICE,.45);
+  if(s.t%26===0){ const hit=Math.random()<.72; s.reqs.push({x:30,hit,back:false}); s.total++; if(hit) s.hits++; }
+  s.reqs=s.reqs.filter(r=>{
+    const speed = r.back ? (r.hit?3.4:2.2) : (r.hit?3.4:2.6);
+    r.x += r.back ? -speed : speed;
+    const turn = r.hit ? cx : dx;
+    if(!r.back && r.x>=turn){ r.back=true; r.x=turn; }
+    const col = r.back ? (r.hit?GOOD:WARN) : ICE;
+    glow(ctx,r.x,y,11,col,.6);
+    ctx.fillStyle='rgba(235,250,255,.9)'; ctx.beginPath(); ctx.arc(r.x,y,2.4,0,6.283); ctx.fill();
+    return !(r.back && r.x<=28);
+  });
+  const ratio = s.total? Math.round(s.hits/s.total*100):0;
+  label(ctx,'HIT RATIO '+ratio+'%',18,20,ratio>65?GOOD:WARN,.9);
+});
+
+/* 10 — load balancer with failover */
+make('d4',(W,H)=>({
+  nodes:[0,1,2,3].map(i=>({y:40+i*((H-80)/3),down:false,lit:0})),
+  reqs:[],t:0,rr:0,nextFail:200
+}),(ctx,s,W,H)=>{
+  s.t++;
+  const lbx=W*.24, sx=W*.74;
+  box(ctx,lbx-28,H/2-22,56,44,ICE,.36); label(ctx,'LB',lbx-7,H/2+36,ICE,.6);
+  if(s.t>s.nextFail){ const up=s.nodes.filter(n=>!n.down);
+    if(up.length>2){ up[(Math.random()*up.length)|0].down=true; s.nextFail=s.t+360; }
+    else { s.nodes.forEach(n=>n.down=false); s.nextFail=s.t+420; } }
+  s.nodes.forEach((n,i)=>{
+    ctx.strokeStyle='rgba('+(n.down?BAD:ICE)+','+(n.down?.5:.28)+')';
+    ctx.setLineDash(n.down?[3,3]:[]); ctx.strokeRect(sx-24,n.y-13,48,26); ctx.setLineDash([]);
+    ctx.strokeStyle='rgba('+(n.down?BAD:ICE)+','+(n.down?.14:.12)+')';
+    ctx.beginPath(); ctx.moveTo(lbx+28,H/2); ctx.lineTo(sx-24,n.y); ctx.stroke();
+    if(n.lit>0){ n.lit*=.92; glow(ctx,sx,n.y,20,GOOD,n.lit*.5); }
+    label(ctx,n.down?'DOWN':'OK',sx-8,n.y+4,n.down?BAD:GOOD,n.down?.9:.55);
+  });
+  if(s.t%16===0){ const up=s.nodes.map((n,i)=>i).filter(i=>!s.nodes[i].down);
+    if(up.length){ const target=up[s.rr++%up.length]; s.reqs.push({p:0,t:target}); } }
+  s.reqs=s.reqs.filter(r=>{
+    r.p+=.035; const n=s.nodes[r.t];
+    const x=lbx+28+(sx-24-lbx-28)*r.p, y=H/2+(n.y-H/2)*r.p;
+    glow(ctx,x,y,10,ICE,.6);
+    if(r.p>=1){ n.lit=1; return false; }
+    return true;
+  });
+});
+
+/* 11 — replication lag */
+make('d5',(W,H)=>({
+  leader:{x:W*.22,y:H/2,v:0},
+  f:[0,1,2].map(i=>({x:W*.74,y:36+i*((H-72)/2),v:0,speed:[.055,.028,.012][i]})),
+  t:0,pulses:[]
+}),(ctx,s,W,H)=>{
+  s.t++;
+  if(s.t%50===0){ s.leader.v++; s.f.forEach((f,i)=>s.pulses.push({p:0,i})); }
+  ctx.strokeStyle='rgba('+ICE+',.3)'; ctx.strokeRect(s.leader.x-28,s.leader.y-20,56,40);
+  label(ctx,'LEADER',s.leader.x-22,s.leader.y+36,ICE,.6);
+  label(ctx,'v'+s.leader.v,s.leader.x-8,s.leader.y+4,ICE,.85);
+  s.f.forEach((f,i)=>{
+    ctx.strokeStyle='rgba('+ICE+',.1)';
+    ctx.beginPath(); ctx.moveTo(s.leader.x+28,s.leader.y); ctx.lineTo(f.x-22,f.y); ctx.stroke();
+    const lag=s.leader.v-f.v;
+    const col = lag>3?WARN: lag>1?ICE:GOOD;
+    ctx.strokeStyle='rgba('+col+',.34)'; ctx.strokeRect(f.x-22,f.y-15,44,30);
+    label(ctx,'v'+f.v,f.x-7,f.y+4,col,.85);
+    label(ctx,lag>0?('-'+lag):'sync',f.x+30,f.y+4,col,.75);
+    if(lag>0){ ctx.strokeStyle='rgba('+col+',.5)'; ctx.beginPath();
+      ctx.arc(f.x,f.y,22+lag*3,0,6.283*Math.min(1,1/lag)); ctx.stroke(); }
+  });
+  s.pulses=s.pulses.filter(p=>{
+    const f=s.f[p.i]; p.p+=f.speed;
+    const x=s.leader.x+28+(f.x-22-s.leader.x-28)*p.p, y=s.leader.y+(f.y-s.leader.y)*p.p;
+    glow(ctx,x,y,9,ICE,.55);
+    if(p.p>=1){ f.v++; return false; }
+    return true;
+  });
+});
+
+/* 12 — two fronts interfering */
+make('d6',(W,H)=>{
+  const step=30,N=[];
+  for(let y=step/2;y<H;y+=step) for(let x=step/2;x<W;x+=step)
+    N.push({x:x+(Math.random()-.5)*7,y:y+(Math.random()-.5)*7,lit:0});
+  const src=()=>({x:Math.random()*W,y:Math.random()*H,r:0});
+  return {N,step,a:src(),b:src()};
+},(ctx,s,W,H)=>{
+  const max=Math.hypot(W,H)*1.05;
+  [s.a,s.b].forEach(o=>{ o.r+=2.2; if(o.r>max){ o.r=0; o.x=Math.random()*W; o.y=Math.random()*H; } });
+  ctx.lineWidth=1;
+  for(let i=0;i<s.N.length;i++){
+    const n=s.N[i];
+    [s.a,s.b].forEach(o=>{ const d=Math.hypot(n.x-o.x,n.y-o.y);
+      if(Math.abs(d-o.r)<18) n.lit=Math.min(1.6,n.lit+(1-Math.abs(d-o.r)/18)); });
+    n.lit*=.955;
+    for(let j=i+1;j<s.N.length;j++){
+      const m=s.N[j], dd=Math.hypot(n.x-m.x,n.y-m.y);
+      if(dd>s.step*1.3) continue;
+      const g=Math.max(n.lit,m.lit);
+      ctx.strokeStyle='rgba('+(g>1?WARN:ICE)+','+(.04+Math.min(1,g)*.5).toFixed(3)+')';
+      ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(m.x,m.y); ctx.stroke();
+    }
+    ctx.fillStyle='rgba('+(n.lit>1?WARN:ICE)+','+(.15+Math.min(1,n.lit)*.85).toFixed(3)+')';
+    ctx.beginPath(); ctx.arc(n.x,n.y,1.3+Math.min(1,n.lit)*2.4,0,6.283); ctx.fill();
+  }
+});
+</script>
+</body>
+</html>
