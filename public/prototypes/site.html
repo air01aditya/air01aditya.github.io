@@ -36,7 +36,8 @@
   }
   #intro.gone{display:none}
   #sig{width:min(74vw,860px);height:auto;overflow:visible}
-  #sig path{fill:var(--ink);fill-rule:evenodd}
+  #sig path{fill:var(--ink);fill-rule:evenodd;transition:fill .6s var(--ease)}
+  #sig.lit path{fill:var(--accent)}
   #intro .seg{opacity:0}
 
   /* ─────────── header mark ─────────── */
@@ -240,17 +241,14 @@
 </footer>
 
 <script type="module">
-  const SEEN = 'acp:intro';
   const CAPS = ["A","C","P"];
   const RUNS = ["ditya","handra","rajapati"];
   const DUR  = { ditya: 1150, handra: 1000, rajapati: 1300 };
   const EASE = t => 1 - Math.pow(1 - t, 3);
 
   const intro = document.getElementById('intro');
+  const sig = document.getElementById('sig');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  let seen = false;
-  try { seen = sessionStorage.getItem(SEEN) === '1'; } catch {}
 
   const reveal = () => {
     const io = new IntersectionObserver((entries) => {
@@ -267,7 +265,6 @@
   };
 
   const finish = (instant) => {
-    try { sessionStorage.setItem(SEEN, '1'); } catch {}
     if (instant) { intro.classList.add('gone'); reveal(); return; }
     intro.animate(
       [{ opacity: 1 }, { opacity: 0 }],
@@ -276,7 +273,7 @@
     reveal();
   };
 
-  if (seen || reduced) {
+  if (reduced) {
     finish(true);
   } else {
     const t0 = performance.now();
@@ -294,8 +291,16 @@
     const marks = runs.map(r => { const m = { r, start: at, dur: DUR[r.k] }; at += DUR[r.k] - 70; return m; });
     const END = at + 1250;
 
+    let colored = false;
+    const lastMark = marks[marks.length - 1];
+
     const tick = (now) => {
       const t = now - t0;
+
+      if (!colored && t > lastMark.start + lastMark.dur) {
+        colored = true;
+        sig.classList.add('lit');
+      }
 
       caps.forEach(({ el, dx }, i) => {
         const dropT = Math.min(1, Math.max(0, (t - i * 100) / 620));
