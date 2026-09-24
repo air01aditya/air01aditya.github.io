@@ -319,9 +319,21 @@
           (-90 * (1 - EASE(dropT))).toFixed(2) + 'px)';
       });
 
+      // Only "ditya"'s pen path fills its closing loop with a scribbling
+      // back-and-forth motion that reads as noise while partway drawn,
+      // resolving into a clean shape only right at the end - "handra" and
+      // "rajapati" trace cleanly throughout at the plain linear pace, and
+      // rajapati's tail sits early in its path rather than at the close, so
+      // this split only applies where the problem actually is.
+      const SNAP_SPLIT = { ditya: 0.5 };
+
       marks.forEach(({ r, start, dur }) => {
-        const p = Math.min(1, Math.max(0, (t - start) / dur));
-        if (p > 0) r.seg.style.opacity = 1;
+        const nt = Math.min(1, Math.max(0, (t - start) / dur));
+        const split = SNAP_SPLIT[r.k];
+        const p = (split && nt >= split)
+          ? split + (1 - split) * Math.pow((nt - split) / (1 - split), 0.05)
+          : nt;
+        if (nt > 0) r.seg.style.opacity = 1;
         r.path.setAttribute('stroke-dashoffset', String(1 - p));
       });
 
