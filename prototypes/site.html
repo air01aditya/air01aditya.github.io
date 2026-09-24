@@ -37,7 +37,6 @@
   #intro.gone{display:none}
   #sig{width:min(74vw,860px);height:auto;overflow:visible}
   #sig path{fill:var(--ink);fill-rule:evenodd;transition:fill .6s var(--ease)}
-  #sig .ghost{opacity:.14}
   #sig.lit path{fill:var(--accent)}
   #intro .seg{opacity:0}
 
@@ -277,23 +276,21 @@
   if (reduced) {
     finish(true);
   } else {
-    const t0 = performance.now();
+    // Anchored to the first rAF callback's own timestamp, not to script-eval
+    // time: if the tab isn't actually rendering yet when this runs (e.g. it
+    // loaded in a background/inactive tab), rAF can sit deferred for a while
+    // before its first callback fires. Anchoring to performance.now() up
+    // front would let that deferred time count against the schedule, so the
+    // first real frame could already land past the whole intro's duration
+    // and skip straight to the finished state instead of playing.
+    let t0 = null;
     const caps = CAPS.map(k => {
       const el = document.getElementById('seg-' + k);
       return { el, dx: parseFloat(el.dataset.dx || '0') };
     });
     const runs = RUNS.map(k => {
       const path = document.getElementById('pen-' + k);
-      const seg = document.getElementById('seg-' + k);
-      // A faint, unmasked copy of the same letterform sits behind the ink
-      // reveal, so the word is already legible as a light guide the moment
-      // it's this name's turn, and the ink then fills in over it.
-      const solid = seg.querySelector('path');
-      const ghost = solid.cloneNode(true);
-      ghost.removeAttribute('mask');
-      ghost.setAttribute('class', 'ghost');
-      seg.insertBefore(ghost, solid);
-      return { k, path, seg };
+      return { k, path, seg: document.getElementById('seg-' + k) };
     });
 
     // build the schedule once, then drive it from a single clock
@@ -305,6 +302,7 @@
     const lastMark = marks[marks.length - 1];
 
     const tick = (now) => {
+      if (t0 === null) t0 = now;
       const t = now - t0;
 
       if (!colored && t > lastMark.start + lastMark.dur) {
