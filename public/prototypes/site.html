@@ -320,14 +320,8 @@
       });
 
       marks.forEach(({ r, start, dur }) => {
-        const nt = Math.min(1, Math.max(0, (t - start) / dur));
-        // The traced pen path spends its back half on a redundant flourish
-        // tail past the point the letters already read as complete, so a
-        // linear reveal looks like the word pops in early then idles. An
-        // ease-in curve spends most of the duration on the part that's
-        // actually visible, so it keeps reading as being written throughout.
-        const p = nt * nt * nt * nt;
-        if (nt > 0) r.seg.style.opacity = 1;
+        const p = Math.min(1, Math.max(0, (t - start) / dur));
+        if (p > 0) r.seg.style.opacity = 1;
         r.path.setAttribute('stroke-dashoffset', String(1 - p));
       });
 
