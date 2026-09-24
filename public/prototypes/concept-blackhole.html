@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACP.X — concept 2 — Black hole hub</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #05050A; color: #E8E8E4; overflow: hidden;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+  }
+  canvas { position: fixed; inset: 0; }
+  #ring { position: fixed; inset: 0; pointer-events: none; }
+  #orbiters { position: fixed; inset: 0; }
+
+  .orb { position: absolute; transform: translate(-50%, -50%); cursor: pointer; }
+  .orb .body {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #E8E8E4; box-shadow: 0 0 14px rgba(232,232,228,.55);
+    transition: transform .25s ease, background .25s ease, box-shadow .25s ease;
+  }
+  .orb:hover .body, .orb.on .body {
+    background: #F0A882; transform: scale(1.65);
+    box-shadow: 0 0 24px rgba(198,97,63,.95);
+  }
+  .orb .tag {
+    position: absolute; left: 18px; top: -8px; white-space: nowrap;
+    font-size: 12px; letter-spacing: .05em; color: #8A8A94;
+    transition: color .25s ease; pointer-events: none;
+  }
+  .orb:hover .tag, .orb.on .tag { color: #E8E8E4; }
+
+  header { position: fixed; top: 30px; left: 34px; z-index: 5; }
+  .kicker { font-size: 11px; letter-spacing: .22em; color: #6A6A74; margin: 0 0 8px; }
+  h1 { margin: 0; font-size: 19px; font-weight: 500; letter-spacing: .02em; }
+
+  aside {
+    position: fixed; right: 0; top: 0; bottom: 0; width: 370px; max-width: 86vw;
+    background: rgba(10,10,16,.94); border-left: 1px solid #1E1E26;
+    padding: 34px 32px; transform: translateX(100%);
+    transition: transform .42s cubic-bezier(.22,.7,.3,1); z-index: 6; overflow-y: auto;
+  }
+  aside.open { transform: none; }
+  aside h2 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  aside .meta { font-size: 11px; letter-spacing: .16em; color: #C6613F; margin: 0 0 20px; }
+  aside p { font-size: 14px; line-height: 1.65; color: #A6A6B0; margin: 0 0 14px; }
+  aside .k { color: #6A6A74; font-size: 11px; letter-spacing: .16em; display: block; margin-bottom: 4px; }
+  aside .close {
+    position: absolute; top: 22px; right: 26px; background: none; border: none;
+    color: #6A6A74; font-size: 20px; cursor: pointer; line-height: 1;
+  }
+  aside .close:hover { color: #E8E8E4; }
+
+  .escape {
+    position: fixed; bottom: 26px; left: 34px; z-index: 5;
+    font-size: 12px; color: #6A6A74; border: 1px solid #23232C;
+    background: rgba(10,10,16,.7); padding: 9px 15px; border-radius: 7px;
+    cursor: pointer; letter-spacing: .04em;
+  }
+  .escape:hover { color: #E8E8E4; border-color: #3A3A46; }
+  .note { position: fixed; bottom: 28px; right: 34px; z-index: 5;
+          font-size: 11px; color: #4A4A54; letter-spacing: .05em; }
+  .hint { position: fixed; bottom: 60px; right: 34px; z-index: 5;
+          font-size: 11px; color: #3A3A46; letter-spacing: .05em; }
+</style>
+</head>
+<body>
+<canvas id="disc"></canvas>
+<svg id="ring" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet">
+  <g transform="rotate(-46 500 310)">
+    <ellipse cx="500" cy="310" rx="106" ry="51" fill="none" stroke="#E8E8E4" stroke-width="9"/>
+  </g>
+</svg>
+<div id="orbiters"></div>
+
+<header>
+  <p class="kicker">PROOF OF WORK · ACP.X</p>
+  <h1>Aditya Chandra Prajapati</h1>
+</header>
+
+<button class="escape" id="escape">See a plain list instead</button>
+<p class="hint">the O from your intro, still here</p>
+<p class="note">concept 2 — black hole hub</p>
+
+<aside id="panel">
+  <button class="close" id="close">&times;</button>
+  <h2 id="p-title"></h2>
+  <p class="meta" id="p-meta"></p>
+  <p><span class="k">PROBLEM</span><span id="p-problem"></span></p>
+  <p><span class="k">APPROACH</span><span id="p-approach"></span></p>
+  <p><span class="k">WHAT BROKE</span><span id="p-broke"></span></p>
+  <p><span class="k">RESULT</span><span id="p-result"></span></p>
+</aside>
+
+<script>
+const PROJECTS = [
+  { name:'Snake Game', meta:'C++ · TERMINAL', r:1.55, a:0.4, sp:0.00022,
+    problem:'Wanted a game with no engine and no libraries — just the language.',
+    approach:'Terminal rendering in C++, a custom queue for the snake body.',
+    broke:'Collision checks ran after the render, so fast turns clipped a frame late.',
+    result:'Plays clean at speed. Compiles to WebAssembly, so it can run on this page.' },
+  { name:'Night Cravings', meta:'JAVASCRIPT', r:2.05, a:1.9, sp:0.00017,
+    problem:'Ordering late at night means scrolling menus that assume daylight.',
+    approach:'Plain JavaScript, no framework. Built for thumbs and dark rooms.',
+    broke:'State lived in the DOM, so the cart desynced on back navigation.',
+    result:'Single page, loads instantly, nothing to install.' },
+  { name:'Aditya Blog', meta:'JAVASCRIPT', r:2.55, a:3.4, sp:0.00013,
+    problem:'Needed somewhere to write things down as I learned them.',
+    approach:'Static build, posts as files rather than a database.',
+    broke:'node_modules got committed — 72MB in the repo before I caught it.',
+    result:'Publishes from a push. Taught me what .gitignore is for.' },
+  { name:'Patient Dashboard', meta:'POWER BI', r:3.05, a:5.1, sp:0.00010,
+    problem:'Clinical summaries were read across several disconnected reports.',
+    approach:'One Power BI view — cohort, trend and outlier on a single screen.',
+    broke:'Averages hid the outliers that actually mattered.',
+    result:'A reader finds the exception in seconds instead of minutes.' },
+  { name:'Coffee Shop Sales', meta:'EXCEL · KPI', r:3.55, a:2.6, sp:0.00008,
+    problem:'Sales data existed but nobody could see the shape of a day in it.',
+    approach:'Hourly trend, product mix and size split against footfall.',
+    broke:'Footfall and sales were on different time grains — the join was wrong.',
+    result:'The afternoon dip turned out to be a staffing gap, not demand.' },
+  { name:'Student Records', meta:'C++ · FILE I/O', r:4.05, a:0.9, sp:0.00007,
+    problem:'Record keeping by hand, with no way to search it.',
+    approach:'C++ with file-backed storage and its own record format.',
+    broke:'A partial write on crash left the file unreadable.',
+    result:'Writes atomically now. Survives being killed mid-save.' },
+];
+
+const ROT = -46 * Math.PI / 180;
+const SQUASH = 51 / 106;
+const host = document.getElementById('orbiters');
+const els = [];
+
+PROJECTS.forEach(p => {
+  const el = document.createElement('div');
+  el.className = 'orb';
+  el.innerHTML = '<div class="body"></div><div class="tag">' + p.name + '</div>';
+  el.addEventListener('click', () => open(p, el));
+  host.appendChild(el);
+  els.push(el);
+});
+
+// The O is drawn in a 1000x620 viewBox with preserveAspectRatio, so work out
+// where it actually landed on screen before placing anything in orbit round it.
+function ringFrame() {
+  const s = Math.min(innerWidth / 1000, innerHeight / 620);
+  return { cx: innerWidth / 2, cy: innerHeight / 2, unit: 106 * s };
+}
+
+let paused = false;
+function frame(now) {
+  if (!paused) {
+    const f = ringFrame();
+    const ca = Math.cos(ROT), sa = Math.sin(ROT);
+    PROJECTS.forEach((p, i) => {
+      p.a += p.sp * 16;
+      const u = Math.cos(p.a) * p.r * f.unit;
+      const v = Math.sin(p.a) * p.r * f.unit * SQUASH;
+      els[i].style.left = (f.cx + u * ca - v * sa) + 'px';
+      els[i].style.top = (f.cy + u * sa + v * ca) + 'px';
+    });
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const panel = document.getElementById('panel');
+function open(p, el) {
+  els.forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  paused = true;
+  document.getElementById('p-title').textContent = p.name;
+  document.getElementById('p-meta').textContent = p.meta;
+  document.getElementById('p-problem').textContent = p.problem;
+  document.getElementById('p-approach').textContent = p.approach;
+  document.getElementById('p-broke').textContent = p.broke;
+  document.getElementById('p-result').textContent = p.result;
+  panel.classList.add('open');
+}
+document.getElementById('close').addEventListener('click', () => {
+  panel.classList.remove('open');
+  els.forEach(e => e.classList.remove('on'));
+  paused = false;
+});
+document.getElementById('escape').addEventListener('click', () => {
+  alert('This would go to a plain, boring list of every project.\n\nThe escape hatch for anyone who does not want to wait for an orbit.');
+});
+
+// accretion streaks pulling into the O
+const cv = document.getElementById('disc'), ctx = cv.getContext('2d');
+let P = [];
+function size() {
+  const d = devicePixelRatio || 1;
+  cv.width = innerWidth * d; cv.height = innerHeight * d;
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  P = Array.from({ length: 300 }, () => ({
+    a: Math.random() * 6.283, r: 1.1 + Math.random() * 4.6,
+    sp: 0.4 + Math.random() * 1.5, w: 0.3 + Math.random() * 0.9,
+    len: 0.02 + Math.random() * 0.07,
+  }));
+}
+size(); addEventListener('resize', size);
+
+(function tick() {
+  const f = ringFrame();
+  const ca = Math.cos(ROT), sa = Math.sin(ROT);
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  ctx.lineCap = 'round';
+  const at = (ang, rr) => {
+    const u = Math.cos(ang) * rr * f.unit, v = Math.sin(ang) * rr * f.unit * SQUASH;
+    return [f.cx + u * ca - v * sa, f.cy + u * sa + v * ca];
+  };
+  for (const p of P) {
+    p.a += p.sp * 0.0022 * (1 + 0.8 / Math.max(0.4, p.r));
+    p.r -= 0.00042 * p.sp;
+    if (p.r < 1.06) { p.r = 4.2 + Math.random() * 1.6; p.a = Math.random() * 6.283; }
+    const q = at(p.a, p.r), q2 = at(p.a - p.len, p.r);
+    const near = Math.max(0, Math.min(1, (4 - p.r) / 2.6));
+    ctx.strokeStyle = 'rgba(232,232,228,' + (0.05 + near * 0.4).toFixed(3) + ')';
+    ctx.lineWidth = p.w;
+    ctx.beginPath(); ctx.moveTo(q2[0], q2[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
