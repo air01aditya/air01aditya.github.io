@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACP.X — connector systems</title>
+<style>
+  :root {
+    --void: #04060D; --ice: #7FE3FF; --warn: #FF9A6B; --good: #6FE0A8;
+    --text: #CDE6F2; --dim: #587687; --line: rgba(127,227,255,.16);
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--void); color: var(--text); font-family: var(--sans);
+    background-image:
+      linear-gradient(rgba(127,227,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(127,227,255,.03) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 46px 32px 90px; }
+  .lab { font-family: var(--mono); font-size: 10px; letter-spacing: .26em; color: var(--dim); }
+  header { display: flex; justify-content: space-between; align-items: baseline;
+           border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 14px; }
+  header h1 { margin: 0; font-size: 14px; letter-spacing: .12em; font-weight: 500; }
+  header h1 b { color: var(--ice); font-weight: 500; }
+  .note { font-size: 13.5px; color: var(--dim); margin: 0 0 30px; max-width: 62ch; line-height: 1.6; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  figure {
+    margin: 0; border: 1px solid var(--line); background: rgba(127,227,255,.025);
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+  figure:hover { border-color: rgba(127,227,255,.4); box-shadow: 0 0 34px rgba(127,227,255,.1); }
+  .can { display: block; width: 100%; height: 260px; }
+  figcaption { padding: 14px 18px 16px; border-top: 1px solid var(--line); }
+  figcaption .t { font-size: 15px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 5px; }
+  figcaption .t span { color: var(--ice); font-family: var(--mono); font-size: 10px;
+                       letter-spacing: .2em; margin-right: 10px; font-weight: 400; }
+  figcaption .d { font-size: 13px; color: var(--dim); line-height: 1.55; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .wrap { padding: 36px 20px 70px; } }
+  @media (prefers-reduced-motion: reduce) { .can { opacity: .85; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ACP<b>.X</b> &nbsp;//&nbsp; CONNECTOR SYSTEMS</h1>
+    <span class="lab">06 TREATMENTS &middot; LIVE</span>
+  </header>
+  <p class="note">Six ways to draw a system that thinks. All canvas, no libraries, no images. Move your cursor over the second one.</p>
+
+  <div class="grid">
+    <figure><canvas class="can" id="c1"></canvas><figcaption>
+      <div class="t"><span>01</span>Forward pass</div>
+      <div class="d">A layered network with signals travelling edge by edge. Reads unmistakably as a neural net rather than a generic graph.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="c2"></canvas><figcaption>
+      <div class="t"><span>02</span>Living constellation</div>
+      <div class="d">Nodes drift, and an edge forms whenever two get close. Your cursor has gravity &mdash; the field bends toward it.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="c3"></canvas><figcaption>
+      <div class="t"><span>03</span>Signal routing</div>
+      <div class="d">Right-angle traces like a board, with packets running them and junctions lighting as each one passes.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="c4"></canvas><figcaption>
+      <div class="t"><span>04</span>Attention matrix</div>
+      <div class="d">The grid a transformer actually computes. A scan line sweeps and cells ignite by weight. The most literally &ldquo;AI&rdquo; of the six.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="c5"></canvas><figcaption>
+      <div class="t"><span>05</span>Embedding space</div>
+      <div class="d">Scattered points pulled into clusters, then released and re-formed around new centres. Meaning settling out of noise.</div>
+    </figcaption></figure>
+
+    <figure><canvas class="can" id="c6"></canvas><figcaption>
+      <div class="t"><span>06</span>Propagation</div>
+      <div class="d">A pulse crossing a mesh, lighting each node as the wavefront reaches it. Good as a full-page background at low opacity.</div>
+    </figcaption></figure>
+  </div>
+</div>
+
+<script>
+const ICE = '127,227,255', WARN = '255,154,107', GOOD = '111,224,168';
+
+// shared canvas setup — handles DPR and resize for every demo
+function make(id, init, draw) {
+  const cv = document.getElementById(id), ctx = cv.getContext('2d');
+  let W = 0, H = 0, state = null;
+  function size() {
+    const d = window.devicePixelRatio || 1;
+    const r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * d; cv.height = H * d;
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    state = init(W, H);
+  }
+  size();
+  addEventListener('resize', size);
+  (function loop(t) { ctx.clearRect(0, 0, W, H); draw(ctx, state, W, H, t); requestAnimationFrame(loop); })(0);
+  return { el: cv };
+}
+
+/* 01 — forward pass through a layered net */
+make('c1', (W, H) => {
+  const layers = [4, 6, 6, 3], nodes = [], edges = [];
+  layers.forEach((n, li) => {
+    for (let i = 0; i < n; i++) {
+      nodes.push({ x: 60 + li * ((W - 120) / (layers.length - 1)),
+                   y: H / 2 + (i - (n - 1) / 2) * Math.min(34, (H - 60) / n), l: li, lit: 0 });
+    }
+  });
+  nodes.forEach((a, i) => nodes.forEach((b, j) => {
+    if (b.l === a.l + 1) edges.push({ a: i, b: j, p: -1, w: .25 + Math.random() * .75 });
+  }));
+  return { nodes, edges, wave: 0, next: 0 };
+}, (ctx, s, W, H, t) => {
+  if (t > s.next) { s.next = t + 1500; s.edges.forEach(e => { e.p = -Math.random() * .35; }); }
+  ctx.lineWidth = 1;
+  for (const e of s.edges) {
+    const a = s.nodes[e.a], b = s.nodes[e.b];
+    ctx.strokeStyle = 'rgba(' + ICE + ',' + (.05 + e.w * .07).toFixed(3) + ')';
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    if (e.p >= 0 && e.p <= 1) {
+      const x = a.x + (b.x - a.x) * e.p, y = a.y + (b.y - a.y) * e.p;
+      ctx.fillStyle = 'rgba(' + ICE + ',' + (e.w * .9).toFixed(2) + ')';
+      ctx.beginPath(); ctx.arc(x, y, 1.6 + e.w, 0, 6.283); ctx.fill();
+      if (e.p > .96) s.nodes[e.b].lit = 1;
+    }
+    if (e.p < 1.2) e.p += .016;
+  }
+  for (const n of s.nodes) {
+    n.lit *= .94;
+    ctx.fillStyle = 'rgba(' + ICE + ',' + (.3 + n.lit * .7).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(n.x, n.y, 3.4 + n.lit * 3, 0, 6.283); ctx.fill();
+    if (n.lit > .1) {
+      ctx.strokeStyle = 'rgba(' + ICE + ',' + (n.lit * .5).toFixed(2) + ')';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 8 + n.lit * 7, 0, 6.283); ctx.stroke();
+    }
+  }
+});
+
+/* 02 — drifting field that links up, and follows the cursor */
+const m2 = { x: -999, y: -999 };
+make('c2', (W, H) => ({
+  P: Array.from({ length: 46 }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - .5) * .28, vy: (Math.random() - .5) * .28,
+  })),
+}), (ctx, s, W, H) => {
+  for (const p of s.P) {
+    const dx = m2.x - p.x, dy = m2.y - p.y, d = Math.hypot(dx, dy);
+    if (d < 160 && d > 1) { p.vx += (dx / d) * .014; p.vy += (dy / d) * .014; }
+    p.vx *= .985; p.vy *= .985;
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0 || p.x > W) p.vx *= -1;
+    if (p.y < 0 || p.y > H) p.vy *= -1;
+    p.x = Math.max(0, Math.min(W, p.x)); p.y = Math.max(0, Math.min(H, p.y));
+  }
+  ctx.lineWidth = 1;
+  for (let i = 0; i < s.P.length; i++) for (let j = i + 1; j < s.P.length; j++) {
+    const a = s.P[i], b = s.P[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (d > 108) continue;
+    ctx.strokeStyle = 'rgba(' + ICE + ',' + ((1 - d / 108) * .42).toFixed(3) + ')';
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  for (const p of s.P) {
+    ctx.fillStyle = 'rgba(' + ICE + ',.85)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 1.9, 0, 6.283); ctx.fill();
+  }
+}).el.addEventListener('mousemove', function (e) {
+  const r = this.getBoundingClientRect(); m2.x = e.clientX - r.left; m2.y = e.clientY - r.top;
+});
+document.getElementById('c2').addEventListener('mouseleave', () => { m2.x = -999; m2.y = -999; });
+
+/* 03 — right-angle traces with packets */
+make('c3', (W, H) => {
+  const lanes = [], N = 7;
+  for (let i = 0; i < N; i++) {
+    const y1 = 26 + Math.random() * (H - 52), y2 = 26 + Math.random() * (H - 52);
+    const mid = 60 + Math.random() * (W - 120);
+    lanes.push({ pts: [[0, y1], [mid, y1], [mid, y2], [W, y2]],
+                 p: Math.random(), sp: .0016 + Math.random() * .0028 });
+  }
+  return { lanes };
+}, (ctx, s, W, H) => {
+  ctx.lineWidth = 1;
+  for (const L of s.lanes) {
+    ctx.strokeStyle = 'rgba(' + ICE + ',.13)';
+    ctx.beginPath(); ctx.moveTo(L.pts[0][0], L.pts[0][1]);
+    for (let i = 1; i < L.pts.length; i++) ctx.lineTo(L.pts[i][0], L.pts[i][1]);
+    ctx.stroke();
+    for (let i = 1; i < L.pts.length - 1; i++) {
+      ctx.fillStyle = 'rgba(' + ICE + ',.35)';
+      ctx.fillRect(L.pts[i][0] - 2.5, L.pts[i][1] - 2.5, 5, 5);
+    }
+    // total length, then walk the packet along it
+    let tot = 0; const segs = [];
+    for (let i = 1; i < L.pts.length; i++) {
+      const d = Math.hypot(L.pts[i][0] - L.pts[i-1][0], L.pts[i][1] - L.pts[i-1][1]);
+      segs.push(d); tot += d;
+    }
+    L.p += L.sp; if (L.p > 1) L.p = 0;
+    let want = L.p * tot, k = 0;
+    while (k < segs.length && want > segs[k]) { want -= segs[k]; k++; }
+    if (k < segs.length) {
+      const a = L.pts[k], b = L.pts[k + 1], f = want / segs[k];
+      const x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 12);
+      g.addColorStop(0, 'rgba(' + ICE + ',.9)'); g.addColorStop(1, 'rgba(' + ICE + ',0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.283); ctx.fill();
+      ctx.fillStyle = 'rgba(230,248,255,.95)'; ctx.fillRect(x - 1.6, y - 1.6, 3.2, 3.2);
+    }
+  }
+});
+
+/* 04 — attention matrix with a scan line */
+make('c4', (W, H) => {
+  const n = 14, cell = Math.min((W - 40) / n, (H - 40) / n);
+  const m = Array.from({ length: n }, () => Array.from({ length: n }, () => Math.random()));
+  return { n, cell, m, ox: (W - cell * n) / 2, oy: (H - cell * n) / 2, row: 0, tick: 0 };
+}, (ctx, s, W, H) => {
+  s.tick++;
+  if (s.tick % 9 === 0) {
+    s.row = (s.row + 1) % s.n;
+    for (let j = 0; j < s.n; j++) s.m[s.row][j] = Math.pow(Math.random(), 1.8);
+  }
+  for (let i = 0; i < s.n; i++) for (let j = 0; j < s.n; j++) {
+    const v = s.m[i][j];
+    const near = Math.max(0, 1 - Math.abs(i - s.row) / 3);
+    const a = v * (.14 + near * .8);
+    ctx.fillStyle = 'rgba(' + (i === s.row ? WARN : ICE) + ',' + a.toFixed(3) + ')';
+    ctx.fillRect(s.ox + j * s.cell + 1, s.oy + i * s.cell + 1, s.cell - 2, s.cell - 2);
+  }
+  ctx.strokeStyle = 'rgba(' + WARN + ',.55)'; ctx.lineWidth = 1;
+  ctx.strokeRect(s.ox - 1, s.oy + s.row * s.cell, s.cell * s.n + 2, s.cell);
+});
+
+/* 05 — points settling into clusters, then re-forming */
+make('c5', (W, H) => {
+  const K = 4;
+  const centres = () => Array.from({ length: K }, () => ({ x: 50 + Math.random() * (W - 100), y: 40 + Math.random() * (H - 80) }));
+  const C = centres();
+  return {
+    C, next: 0, mk: centres,
+    P: Array.from({ length: 150 }, () => ({ x: Math.random() * W, y: Math.random() * H, k: (Math.random() * K) | 0 })),
+  };
+}, (ctx, s, W, H, t) => {
+  if (t > s.next) { s.next = t + 3400; s.C = s.mk(); s.P.forEach(p => { p.k = (Math.random() * s.C.length) | 0; }); }
+  for (const p of s.P) {
+    const c = s.C[p.k];
+    p.x += (c.x - p.x) * .022 + (Math.random() - .5) * .8;
+    p.y += (c.y - p.y) * .022 + (Math.random() - .5) * .8;
+    const d = Math.hypot(c.x - p.x, c.y - p.y);
+    const a = Math.max(.15, 1 - d / 120);
+    ctx.fillStyle = 'rgba(' + (p.k % 2 ? ICE : GOOD) + ',' + (a * .8).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 1.7, 0, 6.283); ctx.fill();
+  }
+  for (const c of s.C) {
+    ctx.strokeStyle = 'rgba(' + ICE + ',.22)';
+    ctx.beginPath(); ctx.arc(c.x, c.y, 26, 0, 6.283); ctx.stroke();
+  }
+});
+
+/* 06 — a pulse crossing a mesh */
+make('c6', (W, H) => {
+  const step = 34, N = [];
+  for (let y = step / 2; y < H; y += step)
+    for (let x = step / 2; x < W; x += step)
+      N.push({ x: x + (Math.random() - .5) * 9, y: y + (Math.random() - .5) * 9, lit: 0 });
+  return { N, step, r: 0, ox: Math.random() * W, oy: Math.random() * H };
+}, (ctx, s, W, H) => {
+  s.r += 2.6;
+  if (s.r > Math.hypot(W, H) * 1.05) { s.r = 0; s.ox = Math.random() * W; s.oy = Math.random() * H; }
+  ctx.lineWidth = 1;
+  for (let i = 0; i < s.N.length; i++) {
+    const a = s.N[i];
+    const d = Math.hypot(a.x - s.ox, a.y - s.oy);
+    if (Math.abs(d - s.r) < 20) a.lit = Math.max(a.lit, 1 - Math.abs(d - s.r) / 20);
+    a.lit *= .955;
+    for (let j = i + 1; j < s.N.length; j++) {
+      const b = s.N[j], dd = Math.hypot(a.x - b.x, a.y - b.y);
+      if (dd > s.step * 1.25) continue;
+      const g = Math.max(a.lit, b.lit);
+      ctx.strokeStyle = 'rgba(' + ICE + ',' + (.045 + g * .5).toFixed(3) + ')';
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(' + ICE + ',' + (.18 + a.lit * .82).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(a.x, a.y, 1.4 + a.lit * 2.6, 0, 6.283); ctx.fill();
+  }
+});
+</script>
+</body>
+</html>

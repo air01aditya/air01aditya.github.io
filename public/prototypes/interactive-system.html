@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACP.X — break this system</title>
+<style>
+  :root {
+    --void: #04060D; --ice: #7FE3FF; --warn: #FF9A6B; --good: #6FE0A8; --bad: #FF6B6B;
+    --text: #CDE6F2; --dim: #587687; --line: rgba(127,227,255,.16);
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--void); color: var(--text); font-family: var(--sans);
+    background-image:
+      linear-gradient(rgba(127,227,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(127,227,255,.03) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 44px 30px 80px; }
+  .lab { font-family: var(--mono); font-size: 10px; letter-spacing: .26em; color: var(--dim); }
+  header { display: flex; justify-content: space-between; align-items: baseline;
+           border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 16px; }
+  header h1 { margin: 0; font-size: 14px; letter-spacing: .12em; font-weight: 500; }
+  header h1 b { color: var(--ice); font-weight: 500; }
+  .note { font-size: 14.5px; color: #9BBECD; margin: 0 0 24px; max-width: 70ch; line-height: 1.65; }
+  .note b { color: var(--ice); font-weight: 500; }
+
+  .stage { border: 1px solid var(--line); background: rgba(127,227,255,.025); }
+  #sim { display: block; width: 100%; height: 330px; cursor: pointer; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); }
+  .metrics div { padding: 13px 16px; border-right: 1px solid var(--line); }
+  .metrics div:last-child { border-right: 0; }
+  .metrics .v { font-family: var(--mono); font-size: 22px; margin-top: 6px; color: var(--ice);
+                text-shadow: 0 0 18px rgba(127,227,255,.4); }
+  .metrics .v.hot { color: var(--warn); text-shadow: 0 0 18px rgba(255,154,107,.4); }
+  .metrics .v.bad { color: var(--bad); text-shadow: 0 0 18px rgba(255,107,107,.4); }
+
+  .controls { display: grid; grid-template-columns: 1fr auto auto; gap: 22px; align-items: center;
+              border-top: 1px solid var(--line); padding: 16px; }
+  .slider label { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .slider b { font-family: var(--mono); color: var(--ice); font-weight: 400; font-size: 12px; }
+  input[type=range] { width: 100%; accent-color: #7FE3FF; }
+  .toggle, .reset {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; color: var(--ice);
+    border: 1px solid var(--line); background: rgba(127,227,255,.05); padding: 11px 16px;
+    cursor: pointer; transition: .2s ease; white-space: nowrap;
+  }
+  .toggle:hover, .reset:hover { background: rgba(127,227,255,.14); border-color: var(--ice); }
+  .toggle.on { color: var(--good); border-color: rgba(111,224,168,.5); background: rgba(111,224,168,.1); }
+  .hint { margin: 14px 0 0; font-size: 13px; color: var(--dim); line-height: 1.6; }
+  .hint b { color: var(--warn); font-weight: 500; }
+  @media (max-width: 760px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .controls { grid-template-columns: 1fr; }
+    .wrap { padding: 34px 18px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ACP<b>.X</b> &nbsp;//&nbsp; BREAK THIS SYSTEM</h1>
+    <span class="lab">INTERACTIVE</span>
+  </header>
+  <p class="note">Four servers behind a load balancer. <b>Turn up the traffic until it falls over. Click a server to kill it.</b> Everything you see is a real queueing model, not a loop of pretty dots &mdash; latency comes from actual wait time and drops happen when the queue is genuinely full.</p>
+
+  <div class="stage">
+    <canvas id="sim"></canvas>
+    <div class="metrics">
+      <div><div class="lab">THROUGHPUT</div><div class="v" id="m1">0<span style="font-size:12px">/s</span></div></div>
+      <div><div class="lab">P95 LATENCY</div><div class="v" id="m2">0<span style="font-size:12px">ms</span></div></div>
+      <div><div class="lab">QUEUE DEPTH</div><div class="v" id="m3">0</div></div>
+      <div><div class="lab">DROPPED</div><div class="v" id="m4">0</div></div>
+    </div>
+    <div class="controls">
+      <div class="slider">
+        <label><span class="lab">INCOMING TRAFFIC</span><b id="rateOut">12 req/s</b></label>
+        <input type="range" id="rate" min="1" max="70" value="12">
+      </div>
+      <button class="toggle on" id="cache">CACHE: ON</button>
+      <button class="reset" id="reset">RESET</button>
+    </div>
+  </div>
+
+  <p class="hint">A healthy server clears <b>8 req/s</b> uncached, about <b>13 req/s</b> with the cache on &mdash; turn the cache off and watch capacity fall without touching anything else. Kill servers until you are over the line, and the queue climbs before latency does. That lag is why a dashboard can look fine while a system is already failing.</p>
+</div>
+
+<script>
+const ICE='127,227,255', WARN='255,154,107', GOOD='111,224,168', BAD='255,107,107';
+const cv = document.getElementById('sim'), ctx = cv.getContext('2d');
+const SERVICE_MS = 125;          // work per request on a healthy server
+const PER_SERVER = 8;            // requests/sec one server can clear
+const QUEUE_MAX = 60;
+
+let W=0, H=0, servers=[], queue=[], flying=[], samples=[], dropped=0, done=0, lastSec=0, tput=0;
+let rate = 12, cacheOn = true, acc = 0, lastT = 0;
+
+function layout() {
+  const d = window.devicePixelRatio || 1, r = cv.getBoundingClientRect();
+  W = r.width; H = r.height; cv.width = W*d; cv.height = H*d; ctx.setTransform(d,0,0,d,0,0);
+  const n = servers.length || 4;
+  servers = (servers.length ? servers : Array.from({length:4},()=>({down:false,busy:0,lit:0,served:0})))
+    .map((s,i)=>Object.assign(s,{ x: W*0.62, y: 44 + i*((H-96)/3), w: 96, h: 34 }));
+}
+function reset() {
+  servers = Array.from({length:4},()=>({down:false,busy:0,lit:0,served:0}));
+  queue = []; flying = []; samples = []; dropped = 0; done = 0; tput = 0;
+  layout();
+}
+reset(); addEventListener('resize', layout);
+
+document.getElementById('rate').addEventListener('input', e => {
+  rate = +e.target.value;
+  document.getElementById('rateOut').textContent = rate + ' req/s';
+});
+document.getElementById('cache').addEventListener('click', e => {
+  cacheOn = !cacheOn;
+  e.target.textContent = 'CACHE: ' + (cacheOn ? 'ON' : 'OFF');
+  e.target.classList.toggle('on', cacheOn);
+});
+document.getElementById('reset').addEventListener('click', reset);
+
+// click a server to take it out, click again to bring it back
+cv.addEventListener('click', e => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  for (const s of servers) {
+    if (x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) {
+      s.down = !s.down;
+      if (s.down) s.busy = 0;
+    }
+  }
+});
+
+function p95(arr) {
+  if (!arr.length) return 0;
+  const a = arr.slice().sort((x,y)=>x-y);
+  return a[Math.min(a.length-1, Math.floor(a.length*0.95))];
+}
+
+function frame(t) {
+  const dt = Math.min(100, t - lastT) / 1000; lastT = t;
+  ctx.clearRect(0,0,W,H);
+
+  // ── arrivals ───────────────────────────────────────────────────────
+  acc += rate * dt;
+  while (acc >= 1) {
+    acc -= 1;
+    if (queue.length >= QUEUE_MAX) { dropped++; }
+    else queue.push({ born: t, cached: cacheOn && Math.random() < 0.55 });
+  }
+
+  // ── servers pull from the queue ────────────────────────────────────
+  for (const s of servers) {
+    if (s.down) { s.lit *= 0.9; continue; }
+    if (s.busy > 0) { s.busy -= dt * 1000; s.lit = Math.max(s.lit, 0.55); }
+    if (s.busy <= 0 && queue.length) {
+      const job = queue.shift();
+      const cost = job.cached ? SERVICE_MS * 0.28 : SERVICE_MS;
+      s.busy = cost;
+      s.served++; done++;
+      samples.push(t - job.born);
+      if (samples.length > 140) samples.shift();
+      flying.push({ p: 0, s, cached: job.cached });
+      s.lit = 1;
+    }
+    s.lit *= 0.965;
+  }
+
+  // throughput, sampled once a second
+  if (t - lastSec > 1000) { tput = done; done = 0; lastSec = t; }
+
+  // ── draw ───────────────────────────────────────────────────────────
+  const lbx = W*0.30, lby = H/2, qx = W*0.12;
+  const healthy = servers.filter(s=>!s.down).length;
+  // Capacity has to account for the cache. 55% of requests cost 28% of a full
+  // service, so turning the cache on genuinely raises throughput - and the
+  // number on screen has to say so, or the warning is a lie.
+  const avgMs = cacheOn ? (0.45 * SERVICE_MS + 0.55 * SERVICE_MS * 0.28) : SERVICE_MS;
+  const perServer = 1000 / avgMs;
+  const capacity = Math.round(healthy * perServer);
+  const over = rate > capacity;
+
+  // queue column
+  ctx.strokeStyle = 'rgba('+(queue.length > QUEUE_MAX*0.7 ? WARN : ICE)+',.3)';
+  ctx.lineWidth = 1; ctx.strokeRect(qx-30, 40, 60, H-80);
+  const fillH = (H-84) * Math.min(1, queue.length / QUEUE_MAX);
+  ctx.fillStyle = 'rgba('+(queue.length >= QUEUE_MAX ? BAD : queue.length > QUEUE_MAX*0.7 ? WARN : ICE)+',.5)';
+  ctx.fillRect(qx-28, H-42-fillH, 56, fillH);
+  ctx.fillStyle = 'rgba('+ICE+',.55)'; ctx.font = '9px '+getComputedStyle(document.body).getPropertyValue('--mono');
+  ctx.fillText('QUEUE', qx-18, 30);
+
+  // load balancer
+  ctx.strokeStyle = 'rgba('+(over?WARN:ICE)+',.4)'; ctx.strokeRect(lbx-30, lby-24, 60, 48);
+  ctx.fillStyle = 'rgba('+(over?WARN:ICE)+',.75)'; ctx.fillText('LB', lbx-7, lby+4);
+  ctx.strokeStyle = 'rgba('+ICE+',.16)';
+  ctx.beginPath(); ctx.moveTo(qx+30, lby); ctx.lineTo(lbx-30, lby); ctx.stroke();
+
+  for (const s of servers) {
+    ctx.strokeStyle = 'rgba('+(s.down?BAD:ICE)+','+(s.down?.55:.3)+')';
+    ctx.setLineDash(s.down?[4,4]:[]); ctx.strokeRect(s.x, s.y, s.w, s.h); ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba('+(s.down?BAD:ICE)+',.1)';
+    ctx.beginPath(); ctx.moveTo(lbx+30, lby); ctx.lineTo(s.x, s.y + s.h/2); ctx.stroke();
+    if (!s.down && s.lit > 0.02) {
+      ctx.fillStyle = 'rgba('+GOOD+','+(s.lit*0.2).toFixed(3)+')';
+      ctx.fillRect(s.x+1, s.y+1, s.w-2, s.h-2);
+    }
+    if (!s.down && s.busy > 0) {
+      ctx.fillStyle = 'rgba('+GOOD+',.8)';
+      ctx.fillRect(s.x+8, s.y+s.h-9, (s.w-16) * Math.max(0, s.busy/SERVICE_MS), 4);
+    }
+    ctx.fillStyle = 'rgba('+(s.down?BAD:ICE)+',.8)';
+    ctx.fillText(s.down ? 'DOWN — click to revive' : 'HEALTHY', s.x+9, s.y+16);
+  }
+
+  flying = flying.filter(f => {
+    f.p += dt * 2.6;
+    const x = lbx+30 + (f.s.x - lbx-30) * f.p, y = lby + (f.s.y + f.s.h/2 - lby) * f.p;
+    const col = f.cached ? GOOD : ICE;
+    const g = ctx.createRadialGradient(x,y,0,x,y,9);
+    g.addColorStop(0,'rgba('+col+',.85)'); g.addColorStop(1,'rgba('+col+',0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,9,0,6.283); ctx.fill();
+    return f.p < 1;
+  });
+
+  // capacity warning
+  ctx.fillStyle = 'rgba('+(over?WARN:ICE)+','+(over?.95:.55)+')';
+  ctx.fillText((over ? 'OVER CAPACITY — ' : 'CAPACITY — ') + rate + ' in, ' + capacity + '/s can be served'
+               + (cacheOn ? '  (cache raises this)' : '  (no cache)'), lbx-30, H-14);
+
+  // ── metrics ────────────────────────────────────────────────────────
+  const lat = Math.round(p95(samples));
+  const m1=document.getElementById('m1'), m2=document.getElementById('m2'),
+        m3=document.getElementById('m3'), m4=document.getElementById('m4');
+  m1.innerHTML = tput + '<span style="font-size:12px">/s</span>';
+  m2.innerHTML = lat + '<span style="font-size:12px">ms</span>';
+  m2.className = 'v' + (lat > 2000 ? ' bad' : lat > 600 ? ' hot' : '');
+  m3.textContent = queue.length;
+  m3.className = 'v' + (queue.length >= QUEUE_MAX ? ' bad' : queue.length > QUEUE_MAX*0.6 ? ' hot' : '');
+  m4.textContent = dropped;
+  m4.className = 'v' + (dropped > 0 ? ' bad' : '');
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
