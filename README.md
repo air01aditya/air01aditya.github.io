@@ -1,30 +1,19 @@
 # Proof of Work · ACP.X
 
-The portfolio of **Aditya Chandra** — built in the open, published at
-[air01aditya.github.io](https://air01aditya.github.io).
-
-A portfolio should do one thing: show the work, and show that it runs.
-Every project listed here links to source you can read and something you can open.
-
----
+My portfolio site, published at [air01aditya.github.io](https://air01aditya.github.io).
 
 ## Status
 
-Just started. The site is being built from scratch — this README is the first commit.
-
-- [ ] Pick the stack and scaffold the site
-- [ ] Design the layout
-- [ ] Write the project entries
-- [ ] Ship to GitHub Pages
-
-## Selected work
-
-Filled in as each entry is written. Nothing listed here until it's real and running.
+The site is still being built. The deploy pipeline works, and the handwritten
+signature intro is in `public/prototypes/site.html`. Project pages come next.
 
 ## Stack
 
-To be decided.
+Astro, deployed to GitHub Pages with GitHub Actions on every push to `main`.
 
----
+## Run it locally
 
-<sub>Repo named `air01aditya.github.io` so GitHub Pages serves it from the root, not a subpath.</sub>
+```bash
+npm install
+npm run dev
+```
