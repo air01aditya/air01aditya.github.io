@@ -4,8 +4,9 @@ My portfolio site, published at [air01aditya.github.io](https://air01aditya.gith
 
 ## Status
 
-The site is still being built. The deploy pipeline works, and the handwritten
-signature intro is in `public/prototypes/site.html`. Project pages come next.
+The homepage is live: a handwritten signature intro, then one full-screen slide
+per project. It's all in `src/pages/index.astro`. Older design experiments are
+kept in `archive/prototypes/` and are not published.
 
 ## Stack
 
